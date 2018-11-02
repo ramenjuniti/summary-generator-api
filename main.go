@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"summaryGenerater/app"
 )
 
 func main() {
@@ -27,7 +28,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 	text := r.FormValue("text")
 	delimiter := r.FormValue("delimiter")
-	Generate(text, delimiter)
+	app.Generate(text, delimiter)
 	fmt.Fprintf(w, "text: %v\n", text)
 	fmt.Fprintf(w, "delimiter: %v\n", delimiter)
 }
