@@ -1,24 +1,33 @@
 package main
 
 import (
-	"summaryGeneraterApi/summary"
-
-	"github.com/gin-gonic/gin"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
 )
 
 func main() {
-	router := gin.Default()
+	http.HandleFunc("/", handler)
 
-	router.POST("/post", func(c *gin.Context) {
-		text := c.PostForm("text")
-		delimiter := c.PostForm("delimiter")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+		log.Printf("Defaulting to port %s", port)
+	}
 
-		summary.Generate(text, delimiter)
-		c.JSON(200, gin.H{
-			"summary":   text,
-			"delimiter": delimiter,
-		})
-	})
+	log.Printf("Listening on port %s", port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
+}
 
-	router.Run(":8080")
+func handler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
+	text := r.FormValue("text")
+	delimiter := r.FormValue("delimiter")
+	Generate(text, delimiter)
+	fmt.Fprintf(w, "text: %v\n", text)
+	fmt.Fprintf(w, "delimiter: %v\n", delimiter)
 }
