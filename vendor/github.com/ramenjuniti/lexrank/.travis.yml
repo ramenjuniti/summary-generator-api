@@ -13,6 +13,3 @@ install:
   - go get "github.com/dcadenas/pagerank"
   - go get "github.com/gaspiman/cosine_similarity"
   - go get "github.com/ikawaha/kagome/tokenizer"
-
-ignore:
-  - ./app

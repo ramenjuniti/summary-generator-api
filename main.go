@@ -5,8 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-
-	"github.com/ramenjuniti/lexrank"
 )
 
 func main() {
@@ -20,15 +18,4 @@ func main() {
 
 	log.Printf("Listening on port %s", port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
-}
-
-func handler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return
-	}
-	text := r.FormValue("text")
-	delimiter := r.FormValue("delimiter")
-	summary := lexrank.New()
-	summary.Summarize(text, delimiter)
 }

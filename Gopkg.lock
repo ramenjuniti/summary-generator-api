@@ -33,18 +33,15 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d42e0d072e42604408782bb52244e3a19f2343c13037959b215bb8b0c86d6012"
+  digest = "1:77d22c2465cee81a3fda765ee87b3934acffd4dc2700bf788a92f64424cf9405"
   name = "github.com/ramenjuniti/lexrank"
   packages = ["."]
   pruneopts = "UT"
-  revision = "02c954053d79100a7fa98f87452cc928325f035a"
+  revision = "b58cbe9011296dd0d657e9c4542ae06587f431e1"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  input-imports = [
-    "github.com/ikawaha/kagome/tokenizer",
-    "github.com/ramenjuniti/lexrank",
-  ]
+  input-imports = ["github.com/ramenjuniti/lexrank"]
   solver-name = "gps-cdcl"
   solver-version = 1

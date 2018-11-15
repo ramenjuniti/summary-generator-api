@@ -29,9 +29,9 @@ type SummaryData struct {
 }
 
 type lexRankScore struct {
-	Index    int
-	Sentence string
-	Score    float64
+	Id       int     `json:"id"`
+	Sentence string  `json:"sentence"`
+	Score    float64 `json:"score"`
 }
 
 const (
@@ -173,7 +173,7 @@ func (s *SummaryData) calculateLexRank() {
 		}
 	}
 	graph.Rank(s.damping, s.tolerance, func(identifier int, rank float64) {
-		s.LexRankScores[identifier] = lexRankScore{Index: identifier, Sentence: s.originalSentences[identifier], Score: rank}
+		s.LexRankScores[identifier] = lexRankScore{Id: identifier, Sentence: s.originalSentences[identifier], Score: rank}
 	})
 	sort.Slice(s.LexRankScores, func(i, j int) bool {
 		return s.LexRankScores[i].Score > s.LexRankScores[j].Score
