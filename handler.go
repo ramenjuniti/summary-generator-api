@@ -13,6 +13,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
+
 	text := r.FormValue("text")
 	delimiter := r.FormValue("delimiter")
 	summary := lexrank.New()
