@@ -14,7 +14,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Cache-Control, Content-Type")
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
 
 	text := r.FormValue("text")
