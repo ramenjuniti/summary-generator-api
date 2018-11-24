@@ -16,6 +16,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "Accept, Cache-Control, Content-Type")
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	w.Header().Set("Content-Type", "application/json")
 
 	text := r.FormValue("text")
 	delimiter := r.FormValue("delimiter")
@@ -25,6 +26,5 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprint(w, string(data))
 }

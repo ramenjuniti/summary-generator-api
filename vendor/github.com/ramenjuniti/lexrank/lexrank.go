@@ -5,6 +5,7 @@ import (
 	"math"
 	"sort"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/dcadenas/pagerank"
 	"github.com/gaspiman/cosine_similarity"
@@ -13,6 +14,7 @@ import (
 
 // SummaryData contains data for summary
 type SummaryData struct {
+	characters        int
 	originalSentences []string
 	wordsPerSentence  [][]string
 	tfScores          [][]float64
@@ -20,12 +22,17 @@ type SummaryData struct {
 	tfIdfScores       [][]float64
 	similarityMatrix  [][]float64
 
-	LexRankScores []lexRankScore
+	LexRankScores           []lexRankScore
+	ReRanking               []lexRankScore
+	LineLimitedSummary      []lexRankScore
+	CharacterLimitedSummary []lexRankScore
 
+	maxLines      int
 	maxCharacters int
 	threshold     float64
 	tolerance     float64
 	damping       float64
+	lambda        float64
 }
 
 type lexRankScore struct {
@@ -34,29 +41,73 @@ type lexRankScore struct {
 	Score    float64 `json:"score"`
 }
 
+type Option func(*SummaryData)
+
 const (
+	defaultMaxLines      = 0
 	defaultMaxCharacters = 0
 	defaultThreshold     = 0.5
 	defaultTolerance     = 0.0001
 	defaultDamping       = 0.85
+	defaultLambda        = 1
 )
 
+func MaxLines(maxLines int) Option {
+	return func(args *SummaryData) {
+		if maxLines < 0 {
+			return
+		}
+		args.maxLines = maxLines
+	}
+}
+
+func MaxCharacters(maxCharacters int) Option {
+	return func(args *SummaryData) {
+		if maxCharacters < 0 {
+			return
+		}
+		args.maxCharacters = maxCharacters
+	}
+}
+
+func Threshold(threshold float64) Option {
+	return func(args *SummaryData) {
+		args.threshold = threshold
+	}
+}
+
+func Tolerance(tolerance float64) Option {
+	return func(args *SummaryData) {
+		args.tolerance = tolerance
+	}
+}
+
+func Damping(damping float64) Option {
+	return func(args *SummaryData) {
+		args.damping = damping
+	}
+}
+
+func Lambda(lambda float64) Option {
+	return func(args *SummaryData) {
+		args.lambda = lambda
+	}
+}
+
 // New return SummaryData
-func New() *SummaryData {
-	return &SummaryData{
+func New(options ...Option) *SummaryData {
+	summaryData := &SummaryData{
+		maxLines:      defaultMaxLines,
 		maxCharacters: defaultMaxCharacters,
 		threshold:     defaultThreshold,
 		tolerance:     defaultTolerance,
 		damping:       defaultDamping,
+		lambda:        defaultLambda,
 	}
-}
-
-// Set set SummaryData params
-func (s *SummaryData) Set(m int, th, to, d float64) {
-	s.maxCharacters = m
-	s.threshold = th
-	s.tolerance = to
-	s.damping = d
+	for _, option := range options {
+		option(summaryData)
+	}
+	return summaryData
 }
 
 // Summarize generate summary
@@ -65,6 +116,7 @@ func (s *SummaryData) Summarize(text, delimiter string) {
 		fmt.Println("input isn't specifyed.")
 		return
 	}
+	s.countCharacter(text)
 	s.splitText(text, delimiter)
 	s.splitSentence()
 	s.calculateTf()
@@ -72,6 +124,19 @@ func (s *SummaryData) Summarize(text, delimiter string) {
 	s.calculateTfidf()
 	s.createSimilarityMatrix()
 	s.calculateLexRank()
+	s.calculateMmr()
+	s.createLineLimitedSummary()
+	sort.Slice(s.LineLimitedSummary, func(i, j int) bool {
+		return s.LineLimitedSummary[i].Id < s.LineLimitedSummary[j].Id
+	})
+	s.createCharacterLimitedSummary()
+	sort.Slice(s.CharacterLimitedSummary, func(i, j int) bool {
+		return s.CharacterLimitedSummary[i].Id < s.CharacterLimitedSummary[j].Id
+	})
+}
+
+func (s *SummaryData) countCharacter(text string) {
+	s.characters = utf8.RuneCountInString(text)
 }
 
 func (s *SummaryData) splitText(text, delimiter string) {
@@ -178,4 +243,80 @@ func (s *SummaryData) calculateLexRank() {
 	sort.Slice(s.LexRankScores, func(i, j int) bool {
 		return s.LexRankScores[i].Score > s.LexRankScores[j].Score
 	})
+}
+
+func (s *SummaryData) calculateMmr() {
+	s.ReRanking = []lexRankScore{s.LexRankScores[0]}
+	for len(s.LexRankScores) > len(s.ReRanking) {
+		var maxMmr float64
+		var maxMmrId int
+	L:
+		for i, unselected := range s.LexRankScores {
+			var maxSim float64
+			for _, selected := range s.ReRanking {
+				if unselected.Id == selected.Id {
+					continue L
+				}
+				if currentSim, _ := cosine_similarity.Cosine(s.tfIdfScores[unselected.Id], s.tfIdfScores[selected.Id]); currentSim > maxSim {
+					maxSim = currentSim
+				}
+			}
+			if currentMmr := s.lambda*unselected.Score - (1-s.lambda)*maxSim; currentMmr > maxMmr {
+				maxMmr = currentMmr
+				maxMmrId = i
+			}
+		}
+		s.ReRanking = append(s.ReRanking, s.LexRankScores[maxMmrId])
+	}
+}
+
+func (s *SummaryData) createLineLimitedSummary() {
+	s.LineLimitedSummary = []lexRankScore{}
+	if s.maxLines >= len(s.originalSentences) {
+		s.LineLimitedSummary = append(s.LineLimitedSummary, s.LexRankScores...)
+		return
+	}
+	s.LineLimitedSummary = append(s.LineLimitedSummary, s.LexRankScores[:s.maxLines]...)
+}
+
+func (s *SummaryData) createCharacterLimitedSummary() {
+	s.CharacterLimitedSummary = []lexRankScore{}
+	if s.maxCharacters >= s.characters {
+		s.CharacterLimitedSummary = append(s.CharacterLimitedSummary, s.LexRankScores...)
+		return
+	}
+	n := len(s.originalSentences)
+	value := make([]float64, n)
+	weight := make([]int, n)
+	dp := make([][]float64, n+1)
+	use := make([][]bool, n+1)
+	for i, v := range s.LexRankScores {
+		value[i] = v.Score
+		weight[i] = utf8.RuneCountInString(v.Sentence)
+	}
+	for i := 0; i < n+1; i++ {
+		dp[i] = make([]float64, s.maxCharacters+1)
+		use[i] = make([]bool, s.maxCharacters+1)
+	}
+	for i := 1; i < n+1; i++ {
+		for j := 1; j < s.maxCharacters+1; j++ {
+			if j > weight[i-1] {
+				dp[i][j] = math.Max((dp[i-1][j-weight[i-1]] + value[i-1]), dp[i-1][j])
+				if dp[i-1][j-weight[i-1]]+value[i-1] > dp[i-1][j] {
+					use[i][j] = true
+				}
+			} else {
+				dp[i][j] = dp[i-1][j]
+			}
+		}
+	}
+	i := n
+	j := s.maxCharacters
+	for i > 0 {
+		if use[i][j] {
+			s.CharacterLimitedSummary = append(s.CharacterLimitedSummary, s.LexRankScores[i-1])
+			j -= utf8.RuneCountInString(s.LexRankScores[i-1].Sentence)
+		}
+		i--
+	}
 }
