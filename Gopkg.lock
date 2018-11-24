@@ -33,11 +33,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:826a58361c1bd66bde8abaa75113e218fa05f0898dc321790bc43982bf2d8a32"
+  digest = "1:10753b87ea09616dcedb7b6dc3360676c6941e98f4f6cc9279e963ad983185cf"
   name = "github.com/ramenjuniti/lexrank"
   packages = ["."]
   pruneopts = "UT"
-  revision = "f07e738779015055fb7eb3f53f0c07f6ba24c5bc"
+  revision = "8184ee9c5a0b86e8431fca5a6731bbe9490bf8e3"
 
 [solve-meta]
   analyzer-name = "dep"
