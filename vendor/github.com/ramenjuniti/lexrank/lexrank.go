@@ -46,7 +46,7 @@ type Option func(*SummaryData)
 const (
 	defaultMaxLines      = 0
 	defaultMaxCharacters = 0
-	defaultThreshold     = 0.5
+	defaultThreshold     = 0.001
 	defaultTolerance     = 0.0001
 	defaultDamping       = 0.85
 	defaultLambda        = 1
