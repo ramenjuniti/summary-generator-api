@@ -15,6 +15,7 @@ import (
 // SummaryData contains data for summary
 type SummaryData struct {
 	characters        int
+	originalText      string
 	originalSentences []string
 	wordsPerSentence  [][]string
 	tfScores          [][]float64
@@ -44,6 +45,7 @@ type lexRankScore struct {
 type Option func(*SummaryData)
 
 const (
+	delimiter            = "."
 	defaultMaxLines      = 0
 	defaultMaxCharacters = 0
 	defaultThreshold     = 0.001
@@ -111,13 +113,14 @@ func New(options ...Option) *SummaryData {
 }
 
 // Summarize generate summary
-func (s *SummaryData) Summarize(text, delimiter string) {
-	if len(text) == 0 || len(delimiter) == 0 {
+func (s *SummaryData) Summarize(text string) {
+	if len(text) == 0 {
 		fmt.Println("input isn't specifyed.")
 		return
 	}
-	s.countCharacter(text)
-	s.splitText(text, delimiter)
+	s.changeSentenceEnd(text)
+	s.countCharacter()
+	s.splitText()
 	s.splitSentence()
 	s.calculateTf()
 	s.calculateIdf()
@@ -135,12 +138,30 @@ func (s *SummaryData) Summarize(text, delimiter string) {
 	})
 }
 
-func (s *SummaryData) countCharacter(text string) {
-	s.characters = utf8.RuneCountInString(text)
+func (s *SummaryData) changeSentenceEnd(text string) {
+	if strings.Contains(text, "。") {
+		s.originalText = strings.Replace(text, "。", delimiter, -1)
+	}
+	if strings.Contains(text, "！") {
+		s.originalText = strings.Replace(text, "！", delimiter, -1)
+	}
+	if strings.Contains(text, "？") {
+		s.originalText = strings.Replace(text, "？", delimiter, -1)
+	}
+	if strings.Contains(text, "!") {
+		s.originalText = strings.Replace(text, "!", delimiter, -1)
+	}
+	if strings.Contains(text, "?") {
+		s.originalText = strings.Replace(text, "?", delimiter, -1)
+	}
 }
 
-func (s *SummaryData) splitText(text, delimiter string) {
-	sentences := strings.Split(text, delimiter)
+func (s *SummaryData) countCharacter() {
+	s.characters = utf8.RuneCountInString(s.originalText)
+}
+
+func (s *SummaryData) splitText() {
+	sentences := strings.Split(s.originalText, delimiter)
 	s.originalSentences = sentences[:len(sentences)-1]
 }
 
@@ -246,6 +267,9 @@ func (s *SummaryData) calculateLexRank() {
 }
 
 func (s *SummaryData) calculateMmr() {
+	if len(s.LexRankScores) == 0 {
+		return
+	}
 	s.ReRanking = []lexRankScore{s.LexRankScores[0]}
 	for len(s.LexRankScores) > len(s.ReRanking) {
 		var maxMmr float64

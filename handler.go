@@ -20,7 +20,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	text := r.FormValue("text")
-	delimiter := r.FormValue("delimiter")
 
 	maxLine, err := strconv.ParseInt(r.FormValue("maxLine"), 10, 64)
 	if err != nil {
@@ -61,10 +60,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		lexrank.Damping(damping),
 		lexrank.Lambda(lambda),
 	)
-	summary.Summarize(text, delimiter)
-	data, err := json.Marshal(summary.LexRankScores)
+	summary.Summarize(text)
+	data, err := json.Marshal(summary)
 	if err != nil {
-		panic(err)
+		http.Error(w, err.Error(), 400)
 	}
 	fmt.Fprint(w, string(data))
 }
