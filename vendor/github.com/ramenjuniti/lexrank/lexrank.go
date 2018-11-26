@@ -23,8 +23,9 @@ type SummaryData struct {
 	tfIdfScores       [][]float64
 	similarityMatrix  [][]float64
 
-	LexRankScores           []lexRankScore
-	ReRanking               []lexRankScore
+	lexRankScores []lexRankScore
+	reRanking     []lexRankScore
+
 	LineLimitedSummary      []lexRankScore
 	CharacterLimitedSummary []lexRankScore
 
@@ -250,7 +251,7 @@ func (s *SummaryData) createSimilarityMatrix() {
 
 func (s *SummaryData) calculateLexRank() {
 	graph := pagerank.New()
-	s.LexRankScores = make([]lexRankScore, len(s.originalSentences))
+	s.lexRankScores = make([]lexRankScore, len(s.originalSentences))
 	for i, similarityList := range s.similarityMatrix {
 		for j, similarity := range similarityList {
 			if similarity >= s.threshold {
@@ -259,25 +260,25 @@ func (s *SummaryData) calculateLexRank() {
 		}
 	}
 	graph.Rank(s.damping, s.tolerance, func(identifier int, rank float64) {
-		s.LexRankScores[identifier] = lexRankScore{Id: identifier, Sentence: s.originalSentences[identifier], Score: rank}
+		s.lexRankScores[identifier] = lexRankScore{Id: identifier, Sentence: s.originalSentences[identifier], Score: rank}
 	})
-	sort.Slice(s.LexRankScores, func(i, j int) bool {
-		return s.LexRankScores[i].Score > s.LexRankScores[j].Score
+	sort.Slice(s.lexRankScores, func(i, j int) bool {
+		return s.lexRankScores[i].Score > s.lexRankScores[j].Score
 	})
 }
 
 func (s *SummaryData) calculateMmr() {
-	if len(s.LexRankScores) == 0 {
+	if len(s.lexRankScores) == 0 {
 		return
 	}
-	s.ReRanking = []lexRankScore{s.LexRankScores[0]}
-	for len(s.LexRankScores) > len(s.ReRanking) {
+	s.reRanking = []lexRankScore{s.lexRankScores[0]}
+	for len(s.lexRankScores) > len(s.reRanking) {
 		var maxMmr float64
 		var maxMmrId int
 	L:
-		for i, unselected := range s.LexRankScores {
+		for i, unselected := range s.lexRankScores {
 			var maxSim float64
-			for _, selected := range s.ReRanking {
+			for _, selected := range s.reRanking {
 				if unselected.Id == selected.Id {
 					continue L
 				}
@@ -290,23 +291,23 @@ func (s *SummaryData) calculateMmr() {
 				maxMmrId = i
 			}
 		}
-		s.ReRanking = append(s.ReRanking, s.LexRankScores[maxMmrId])
+		s.reRanking = append(s.reRanking, s.lexRankScores[maxMmrId])
 	}
 }
 
 func (s *SummaryData) createLineLimitedSummary() {
 	s.LineLimitedSummary = []lexRankScore{}
 	if s.maxLines >= len(s.originalSentences) {
-		s.LineLimitedSummary = append(s.LineLimitedSummary, s.ReRanking...)
+		s.LineLimitedSummary = append(s.LineLimitedSummary, s.reRanking...)
 		return
 	}
-	s.LineLimitedSummary = append(s.LineLimitedSummary, s.ReRanking[:s.maxLines]...)
+	s.LineLimitedSummary = append(s.LineLimitedSummary, s.reRanking[:s.maxLines]...)
 }
 
 func (s *SummaryData) createCharacterLimitedSummary() {
 	s.CharacterLimitedSummary = []lexRankScore{}
 	if s.maxCharacters >= s.characters {
-		s.CharacterLimitedSummary = append(s.CharacterLimitedSummary, s.LexRankScores...)
+		s.CharacterLimitedSummary = append(s.CharacterLimitedSummary, s.lexRankScores...)
 		return
 	}
 	n := len(s.originalSentences)
@@ -314,7 +315,7 @@ func (s *SummaryData) createCharacterLimitedSummary() {
 	weight := make([]int, n)
 	dp := make([][]float64, n+1)
 	use := make([][]bool, n+1)
-	for i, v := range s.LexRankScores {
+	for i, v := range s.lexRankScores {
 		value[i] = v.Score
 		weight[i] = utf8.RuneCountInString(v.Sentence)
 	}
@@ -338,8 +339,8 @@ func (s *SummaryData) createCharacterLimitedSummary() {
 	j := s.maxCharacters
 	for i > 0 {
 		if use[i][j] {
-			s.CharacterLimitedSummary = append(s.CharacterLimitedSummary, s.LexRankScores[i-1])
-			j -= utf8.RuneCountInString(s.LexRankScores[i-1].Sentence)
+			s.CharacterLimitedSummary = append(s.CharacterLimitedSummary, s.lexRankScores[i-1])
+			j -= utf8.RuneCountInString(s.lexRankScores[i-1].Sentence)
 		}
 		i--
 	}
