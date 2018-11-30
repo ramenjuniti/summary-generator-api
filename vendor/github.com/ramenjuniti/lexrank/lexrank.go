@@ -286,9 +286,10 @@ func (s *SummaryData) calculateMmr() {
 					maxSim = currentSim
 				}
 			}
-			if currentMmr := s.lambda*unselected.Score - (1-s.lambda)*maxSim; currentMmr > maxMmr {
+			if currentMmr := s.lambda*unselected.Score - (1-s.lambda)*maxSim + 1; currentMmr > maxMmr {
 				maxMmr = currentMmr
 				maxMmrId = i
+				fmt.Println(i)
 			}
 		}
 		s.reRanking = append(s.reRanking, s.lexRankScores[maxMmrId])
