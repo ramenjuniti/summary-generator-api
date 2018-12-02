@@ -125,7 +125,8 @@ func (s *SummaryData) Summarize(text string) {
 		fmt.Println("input isn't specifyed.")
 		return
 	}
-	s.changeSentenceEnd(text)
+	s.originalText = text
+	s.changeSentenceEnd()
 	s.countCharacter()
 	s.splitText()
 	s.splitSentence()
@@ -145,21 +146,21 @@ func (s *SummaryData) Summarize(text string) {
 	})
 }
 
-func (s *SummaryData) changeSentenceEnd(text string) {
-	if strings.Contains(text, "。") {
-		s.originalText = strings.Replace(text, "。", delimiter, -1)
+func (s *SummaryData) changeSentenceEnd() {
+	if strings.Contains(s.originalText, "。") {
+		s.originalText = strings.Replace(s.originalText, "。", delimiter, -1)
 	}
-	if strings.Contains(text, "！") {
-		s.originalText = strings.Replace(text, "！", delimiter, -1)
+	if strings.Contains(s.originalText, "！") {
+		s.originalText = strings.Replace(s.originalText, "！", delimiter, -1)
 	}
-	if strings.Contains(text, "？") {
-		s.originalText = strings.Replace(text, "？", delimiter, -1)
+	if strings.Contains(s.originalText, "？") {
+		s.originalText = strings.Replace(s.originalText, "？", delimiter, -1)
 	}
-	if strings.Contains(text, "!") {
-		s.originalText = strings.Replace(text, "!", delimiter, -1)
+	if strings.Contains(s.originalText, "!") {
+		s.originalText = strings.Replace(s.originalText, "!", delimiter, -1)
 	}
-	if strings.Contains(text, "?") {
-		s.originalText = strings.Replace(text, "?", delimiter, -1)
+	if strings.Contains(s.originalText, "?") {
+		s.originalText = strings.Replace(s.originalText, "?", delimiter, -1)
 	}
 }
 
