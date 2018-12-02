@@ -6,7 +6,16 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/ramenjuniti/lexrank"
+	"github.com/ramenjuniti/lexrank-mmr"
+)
+
+const (
+	defaultMaxLines      = 0
+	defaultMaxCharacters = 0
+	defaultThreshold     = 0.001
+	defaultTolerance     = 0.0001
+	defaultDamping       = 0.85
+	defaultLambda        = 1.0
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -21,40 +30,60 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	text := r.FormValue("text")
 
-	maxLine, err := strconv.ParseInt(r.FormValue("maxLine"), 10, 64)
-	if err != nil {
-		http.Error(w, err.Error(), 400)
-		return
+	maxLines := defaultMaxLines
+	maxCharacters := defaultMaxCharacters
+	threshold := defaultThreshold
+	tolerance := defaultTolerance
+	damping := defaultDamping
+	lambda := defaultLambda
+	var err error
+
+	if r.FormValue("maxLines") != "" {
+		maxLines, err = strconv.Atoi(r.FormValue("maxLines"))
+		if err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
 	}
-	maxCharacter, err := strconv.ParseInt(r.FormValue("maxCharacter"), 10, 64)
-	if err != nil {
-		http.Error(w, err.Error(), 400)
-		return
+	if r.FormValue("maxCharacters") != "" {
+		maxCharacters, err = strconv.Atoi(r.FormValue("maxCharacters"))
+		if err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
 	}
-	threshold, err := strconv.ParseFloat(r.FormValue("threshold"), 64)
-	if err != nil {
-		http.Error(w, err.Error(), 400)
-		return
+	if r.FormValue("threshold") != "" {
+		threshold, err = strconv.ParseFloat(r.FormValue("threshold"), 64)
+		if err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
 	}
-	tolerance, err := strconv.ParseFloat(r.FormValue("tolerance"), 64)
-	if err != nil {
-		http.Error(w, err.Error(), 400)
-		return
+	if r.FormValue("tolerance") != "" {
+		tolerance, err = strconv.ParseFloat(r.FormValue("tolerance"), 64)
+		if err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
 	}
-	damping, err := strconv.ParseFloat(r.FormValue("damping"), 64)
-	if err != nil {
-		http.Error(w, err.Error(), 400)
-		return
+	if r.FormValue("damping") != "" {
+		damping, err = strconv.ParseFloat(r.FormValue("damping"), 64)
+		if err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
 	}
-	lambda, err := strconv.ParseFloat(r.FormValue("lambda"), 64)
-	if err != nil {
-		http.Error(w, err.Error(), 400)
-		return
+	if r.FormValue("lambda") != "" {
+		lambda, err = strconv.ParseFloat(r.FormValue("lambda"), 64)
+		if err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
 	}
 
 	summary := lexrank.New(
-		lexrank.MaxLines(int(maxLine)),
-		lexrank.MaxCharacters(int(maxCharacter)),
+		lexrank.MaxLines(maxLines),
+		lexrank.MaxCharacters(maxCharacters),
 		lexrank.Threshold(threshold),
 		lexrank.Tolerance(tolerance),
 		lexrank.Damping(damping),
