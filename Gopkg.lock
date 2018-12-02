@@ -33,15 +33,15 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7b11718dc5a49a77957bbc49a49c4295f22f998fb5b73e31c9904e09724b928f"
-  name = "github.com/ramenjuniti/lexrank"
+  digest = "1:b16d0b6b693fef3034a7bceb6258298ffbc903b0e093f6aa2f0f2b8db9ddf6bb"
+  name = "github.com/ramenjuniti/lexrank-mmr"
   packages = ["."]
   pruneopts = "UT"
-  revision = "2ab0cdd590b40507fb3dbc11981b66831f545479"
+  revision = "3abf71f1d11793bfdccf683d3ded3549082612c9"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  input-imports = ["github.com/ramenjuniti/lexrank"]
+  input-imports = ["github.com/ramenjuniti/lexrank-mmr"]
   solver-name = "gps-cdcl"
   solver-version = 1

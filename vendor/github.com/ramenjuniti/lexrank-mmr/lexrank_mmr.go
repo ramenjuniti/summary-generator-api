@@ -55,6 +55,7 @@ const (
 	defaultLambda        = 1
 )
 
+// MaxLines set SummaryData.maxLines
 func MaxLines(maxLines int) Option {
 	return func(args *SummaryData) {
 		if maxLines < 0 {
@@ -64,6 +65,7 @@ func MaxLines(maxLines int) Option {
 	}
 }
 
+// MaxCharacters set SummaryData.maxCharacters
 func MaxCharacters(maxCharacters int) Option {
 	return func(args *SummaryData) {
 		if maxCharacters < 0 {
@@ -73,24 +75,28 @@ func MaxCharacters(maxCharacters int) Option {
 	}
 }
 
+// Threshold set SummaryData.threshold
 func Threshold(threshold float64) Option {
 	return func(args *SummaryData) {
 		args.threshold = threshold
 	}
 }
 
+// Tolerance set SummaryData.tolerance
 func Tolerance(tolerance float64) Option {
 	return func(args *SummaryData) {
 		args.tolerance = tolerance
 	}
 }
 
+// Damping set SummaryData.damping
 func Damping(damping float64) Option {
 	return func(args *SummaryData) {
 		args.damping = damping
 	}
 }
 
+// Lambda set SummaryData.lambda
 func Lambda(lambda float64) Option {
 	return func(args *SummaryData) {
 		args.lambda = lambda
