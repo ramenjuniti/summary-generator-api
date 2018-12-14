@@ -13,7 +13,7 @@ POST api/
 
 # Request form-data sample
 # {
-#	  "text": {input text},
+#   "text": {input text},
 #   "maxLines": {input maxLines (default 0)},
 #   "maxCharacters": {input maxCharacters (default 0)},
 #   "threshold": {input threshold (default 0.001)},
