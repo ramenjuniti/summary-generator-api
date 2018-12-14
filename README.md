@@ -31,8 +31,8 @@ POST https://summary-generator.appspot.com/
 
 ```
 {
-  "LineLimitedSummary": [], # Enter here the Line Limited summary data
-  "CharacterLimitedSummary": [] # Enter here the Character Limited summary data
+  "LineLimitedSummary": [], # Enter here the line limited summary data.
+  "CharacterLimitedSummary": [] # Enter here the character limited summary data.
 }
 ```
 
