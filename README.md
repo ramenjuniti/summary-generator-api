@@ -1,4 +1,5 @@
 # summary-generator-api
+
 This is an API to summarize a given Japanese document.
 
 ## Algorithm
@@ -10,9 +11,9 @@ https://github.com/ramenjuniti/lexrank-mmr
 ```
 POST api/
 
-# Request form-data sample 
+# Request form-data sample
 # {
-#	"text": {input text},
+#	  "text": {input text},
 #   "maxLines": {input maxLines (default 0)},
 #   "maxCharacters": {input maxCharacters (default 0)},
 #   "threshold": {input threshold (default 0.001)},
@@ -23,4 +24,5 @@ POST api/
 ```
 
 ## LICENSE
+
 This sotfware is released under the MIT License, see LICENSE
