@@ -1,7 +1,8 @@
 # summary-generator-api
 
 This is an API to summarize a given Japanese document.
-code for https://summary-generator.appspot.com/
+
+Code for https://summary-generator.appspot.com/
 
 ## Algorithm
 
