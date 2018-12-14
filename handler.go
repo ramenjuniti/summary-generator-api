@@ -12,7 +12,7 @@ import (
 const (
 	defaultMaxLines      = 0
 	defaultMaxCharacters = 0
-	defaultThreshold     = 0.001
+	defaultThreshold     = 0.1
 	defaultTolerance     = 0.0001
 	defaultDamping       = 0.85
 	defaultLambda        = 1.0
