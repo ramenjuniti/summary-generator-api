@@ -7,7 +7,7 @@ https://github.com/ramenjuniti/lexrank-mmr
 
 ## Usage
 
-```bash
+```
 POST api/
 
 # Request form-data sample 
