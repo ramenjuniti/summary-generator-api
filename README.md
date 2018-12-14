@@ -10,10 +10,12 @@ https://github.com/ramenjuniti/lexrank-mmr
 
 ## Usage
 
-```
-POST api/
+### Request
 
-# Request form-data sample
+```
+POST https://summary-generator.appspot.com/
+
+# Request form-data
 # {
 #   "text": {input text},
 #   "maxLines": {input maxLines (default 0)},
@@ -23,6 +25,15 @@ POST api/
 #   "damping": {input damping (default 0.85)},
 #   "lambda": {input lambda (default 1.0)}
 # }
+```
+
+### Response
+
+```
+{
+	"LineLimitedSummary": [], # Enter here the Line Limited summary data
+	"CharacterLimitedSummary": [] # Enter here the Character Limited summary data
+}
 ```
 
 ## LICENSE
