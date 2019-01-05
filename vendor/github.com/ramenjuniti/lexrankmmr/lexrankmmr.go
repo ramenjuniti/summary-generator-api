@@ -1,7 +1,7 @@
-package lexrank
+package lexrankmmr
 
 import (
-	"fmt"
+	"errors"
 	"math"
 	"sort"
 	"strings"
@@ -43,7 +43,8 @@ type lexRankScore struct {
 	Score    float64 `json:"score"`
 }
 
-type Option func(*SummaryData)
+// Option for Functional Option Pattern
+type Option func(*SummaryData) error
 
 const (
 	delimiter            = "."
@@ -57,54 +58,72 @@ const (
 
 // MaxLines set SummaryData.maxLines
 func MaxLines(maxLines int) Option {
-	return func(args *SummaryData) {
+	return func(args *SummaryData) error {
 		if maxLines < 0 {
-			return
+			return errors.New("cannot input negative value")
 		}
 		args.maxLines = maxLines
+		return nil
 	}
 }
 
 // MaxCharacters set SummaryData.maxCharacters
 func MaxCharacters(maxCharacters int) Option {
-	return func(args *SummaryData) {
+	return func(args *SummaryData) error {
 		if maxCharacters < 0 {
-			return
+			return errors.New("cannot input negative value")
 		}
 		args.maxCharacters = maxCharacters
+		return nil
 	}
 }
 
 // Threshold set SummaryData.threshold
 func Threshold(threshold float64) Option {
-	return func(args *SummaryData) {
+	return func(args *SummaryData) error {
+		if threshold < 0 || threshold > 1 {
+			return errors.New("cannot input value out of range")
+		}
 		args.threshold = threshold
+		return nil
 	}
 }
 
 // Tolerance set SummaryData.tolerance
 func Tolerance(tolerance float64) Option {
-	return func(args *SummaryData) {
+	return func(args *SummaryData) error {
+		if tolerance < 0 || tolerance > 1 {
+			return errors.New("cannot input value out of range")
+		}
 		args.tolerance = tolerance
+		return nil
 	}
 }
 
 // Damping set SummaryData.damping
 func Damping(damping float64) Option {
-	return func(args *SummaryData) {
+	return func(args *SummaryData) error {
+		if damping < 0 || damping > 1 {
+			return errors.New("cannot input value out of range")
+		}
 		args.damping = damping
+		return nil
 	}
 }
 
 // Lambda set SummaryData.lambda
 func Lambda(lambda float64) Option {
-	return func(args *SummaryData) {
+	return func(args *SummaryData) error {
+		if lambda < 0 || lambda > 1 {
+			return errors.New("cannot input value out of range")
+		}
 		args.lambda = lambda
+		return nil
 	}
 }
 
 // New return SummaryData
-func New(options ...Option) *SummaryData {
+func New(options ...Option) (*SummaryData, error) {
 	summaryData := &SummaryData{
 		maxLines:      defaultMaxLines,
 		maxCharacters: defaultMaxCharacters,
@@ -113,17 +132,17 @@ func New(options ...Option) *SummaryData {
 		damping:       defaultDamping,
 		lambda:        defaultLambda,
 	}
+	var err error
 	for _, option := range options {
-		option(summaryData)
+		err = option(summaryData)
 	}
-	return summaryData
+	return summaryData, err
 }
 
 // Summarize generate summary
-func (s *SummaryData) Summarize(text string) {
+func (s *SummaryData) Summarize(text string) error {
 	if len(text) == 0 {
-		fmt.Println("input isn't specifyed.")
-		return
+		return errors.New("input isn't specifyed")
 	}
 	s.originalText = text
 	s.changeSentenceEnd()
@@ -133,9 +152,15 @@ func (s *SummaryData) Summarize(text string) {
 	s.calculateTf()
 	s.calculateIdf()
 	s.calculateTfidf()
-	s.createSimilarityMatrix()
+	err := s.createSimilarityMatrix()
+	if err != nil {
+		return err
+	}
 	s.calculateLexRank()
-	s.calculateMmr()
+	err = s.calculateMmr()
+	if err != nil {
+		return err
+	}
 	s.createLineLimitedSummary()
 	sort.Slice(s.LineLimitedSummary, func(i, j int) bool {
 		return s.LineLimitedSummary[i].Id < s.LineLimitedSummary[j].Id
@@ -144,6 +169,7 @@ func (s *SummaryData) Summarize(text string) {
 	sort.Slice(s.CharacterLimitedSummary, func(i, j int) bool {
 		return s.CharacterLimitedSummary[i].Id < s.CharacterLimitedSummary[j].Id
 	})
+	return nil
 }
 
 func (s *SummaryData) changeSentenceEnd() {
@@ -237,7 +263,7 @@ func (s *SummaryData) calculateTfidf() {
 	}
 }
 
-func (s *SummaryData) createSimilarityMatrix() {
+func (s *SummaryData) createSimilarityMatrix() error {
 	s.similarityMatrix = make([][]float64, len(s.originalSentences))
 	for i := range s.similarityMatrix {
 		s.similarityMatrix[i] = make([]float64, len(s.originalSentences))
@@ -249,11 +275,16 @@ func (s *SummaryData) createSimilarityMatrix() {
 				s.similarityMatrix[j][i] = 1
 				continue
 			} else {
-				s.similarityMatrix[i][j], _ = cosine_similarity.Cosine(s.tfIdfScores[i], s.tfIdfScores[j])
+				var err error
+				s.similarityMatrix[i][j], err = cosine_similarity.Cosine(s.tfIdfScores[i], s.tfIdfScores[j])
+				if err != nil {
+					return err
+				}
 				s.similarityMatrix[j][i] = s.similarityMatrix[i][j]
 			}
 		}
 	}
+	return nil
 }
 
 func (s *SummaryData) calculateLexRank() {
@@ -274,9 +305,9 @@ func (s *SummaryData) calculateLexRank() {
 	})
 }
 
-func (s *SummaryData) calculateMmr() {
+func (s *SummaryData) calculateMmr() error {
 	if len(s.lexRankScores) == 0 {
-		return
+		return nil
 	}
 	s.reRanking = []lexRankScore{s.lexRankScores[0]}
 	for len(s.lexRankScores) > len(s.reRanking) {
@@ -289,7 +320,11 @@ func (s *SummaryData) calculateMmr() {
 				if unselected.Id == selected.Id {
 					continue L
 				}
-				if currentSim, _ := cosine_similarity.Cosine(s.tfIdfScores[unselected.Id], s.tfIdfScores[selected.Id]); currentSim > maxSim {
+				currentSim, err := cosine_similarity.Cosine(s.tfIdfScores[unselected.Id], s.tfIdfScores[selected.Id])
+				if err != nil {
+					return err
+				}
+				if currentSim > maxSim {
 					maxSim = currentSim
 				}
 			}
@@ -300,6 +335,7 @@ func (s *SummaryData) calculateMmr() {
 		}
 		s.reRanking = append(s.reRanking, s.lexRankScores[maxMmrId])
 	}
+	return nil
 }
 
 func (s *SummaryData) createLineLimitedSummary() {

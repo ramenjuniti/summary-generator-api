@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/ramenjuniti/lexrank-mmr"
+	"github.com/ramenjuniti/lexrankmmr"
 )
 
 const (
@@ -81,15 +81,18 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	summary := lexrank.New(
-		lexrank.MaxLines(maxLines),
-		lexrank.MaxCharacters(maxCharacters),
-		lexrank.Threshold(threshold),
-		lexrank.Tolerance(tolerance),
-		lexrank.Damping(damping),
-		lexrank.Lambda(lambda),
+	summary, err := lexrankmmr.New(
+		lexrankmmr.MaxLines(maxLines),
+		lexrankmmr.MaxCharacters(maxCharacters),
+		lexrankmmr.Threshold(threshold),
+		lexrankmmr.Tolerance(tolerance),
+		lexrankmmr.Damping(damping),
+		lexrankmmr.Lambda(lambda),
 	)
-	summary.Summarize(text)
+	err = summary.Summarize(text)
+	if err != nil {
+		http.Error(w, err.Error(), 400)
+	}
 	data, err := json.Marshal(summary)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
